@@ -1,3 +1,4 @@
+# using the pre-build image
 Bootstrap: library
 From: mnagaso/default/phdf5env:gpu_v1
 
@@ -7,7 +8,8 @@ From: mnagaso/default/phdf5env:gpu_v1
 
 
 %setup
-
+    # unlink broken simlinks because it cause errors during the file copy step
+    find ../../utils/ADJOINT_TOMOGRAPHY_TOOLS -xtype l  -exec unlink {} \;
 %files
     ../.. /specfem3d
 %environment
@@ -30,8 +32,8 @@ From: mnagaso/default/phdf5env:gpu_v1
     cd /specfem3d
 
     autoreconf -i
-    #./configure CC=gcc FC=gfortran MPIFC=mpif90 MPI_INC=$MPICH/include --with-mpi
-    ./configure CC=h5pcc FC=h5pfc MPIFC=h5pfc MPI_INC=$MPICH/include NVCC=nvcc CUDA_INC=/usr/local/cuda/include CUDA_LIB=/usr/local/cuda/lib64  --with-mpi --with-hdf5 --with-cuda=cuda8
+    ./configure CC=gcc FC=gfortran MPIFC=mpif90 MPI_INC=$MPICH/include --with-mpi --with-cuda=cuda9 CUDA_LIB=/usr/local/cuda/lib64
+    #./configure CC=h5pcc FC=h5pfc MPIFC=h5pfc MPI_INC=$MPICH/include NVCC=nvcc CUDA_INC=/usr/local/cuda/include CUDA_LIB=/usr/local/cuda/lib64  --with-mpi --with-hdf5 --with-cuda=cuda9
     make clean && make
 %labels
     Author mnsaru22@gmail.com

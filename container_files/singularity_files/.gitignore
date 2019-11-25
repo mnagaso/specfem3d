@@ -1,0 +1,7 @@
+*.sif
+test/.gitignore
+test/OUTPUT_FILES*
+test/.codecov.yml
+test/.gitattributes
+test/.gitignore
+test/.ipynb_checkpoints
