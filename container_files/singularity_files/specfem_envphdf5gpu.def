@@ -1,0 +1,72 @@
+Bootstrap: docker
+From: nvidia/cuda:10.1-cudnn7-devel-ubuntu18.04
+
+%setup
+%files
+
+%environment
+    export LIBPATH=/Libraries
+    # specificate versions
+    export MPIv=3.3
+    export MPICH=$LIBPATH/mpich-$MPIv
+    export ZLIB=$LIBPATH/zlib-1.2.11
+    export HDF5=$LIBPATH/hdf5-1.10.5
+    export LD_LIBRARY_PATH=$MPICH/lib:$HDF5/lib 
+    export PATH=$MPICH/bin:$HDF5/bin:$PATH
+    export SINGULARITYENV_LD_LIBRARY_PATH=$MPICH/lib 
+    export SINGULARITYENV_PREPEND_PATH=$MPICH/bin
+
+%post
+    export LIBPATH=/Libraries
+    # specificate versions
+    export MPIv=3.3
+    export MPICH=$LIBPATH/mpich-$MPIv
+    export ZLIB=$LIBPATH/zlib-1.2.11
+    export HDF5=$LIBPATH/hdf5-1.10.5
+    export LD_LIBRARY_PATH=$MPICH/lib:$HDF5/lib 
+    export PATH=$MPICH/bin:$HDF5/bin:$PATH
+
+    # prepare hdf5 libraries
+    mkdir ${LIBPATH}_SRC
+    cd ${LIBPATH}_SRC
+    apt-get update
+    apt-get install -y \
+        wget \
+        bzip2 \
+        build-essential \
+        gfortran \
+        zlib1g-dev \
+        git \
+        autoconf
+
+    # fetch.phdf5
+    MPICHv=$(basename "$MPICH")
+    ZLIBv=$(basename "$ZLIB")
+    HDF5v=$(basename "$HDF5")
+    wget http://www.mpich.org/static/downloads/$MPIv/$MPICHv.tar.gz \
+      http://zlib.net/$ZLIBv.tar.gz \
+      https://support.hdfgroup.org/ftp/HDF5/releases/${HDF5v%.*}/$HDF5v/src/$HDF5v.tar.bz2
+    tar xzf $MPICHv.tar.gz && tar xzf $ZLIBv.tar.gz && tar xjf $HDF5v.tar.bz2
+    # build.phdf5
+    ## ==== mpich ====
+    echo $PWD
+    cd $(basename "$MPICH")
+    ./configure --prefix=$MPICH --disable-cxx
+    make && make install
+
+    ## ==== zlib ====
+    cd ../$(basename "$ZLIB")
+    ./configure
+    make install prefix=$ZLIB
+
+    ## ==== hdf5 ====
+    cd ../$(basename "$HDF5")
+    ./configure --prefix=$HDF5 --disable-static --enable-shared --enable-fortran --enable-parallel \
+    --with-zlib=$ZLIB/include,$ZLIB/lib
+    make && make install
+
+    rm -r ${LIBPATH}_SRC
+
+%labels
+    Author mnsaru22@gmail.com
+    Version v0.0.1

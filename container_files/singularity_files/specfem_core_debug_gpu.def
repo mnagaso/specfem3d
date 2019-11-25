@@ -1,0 +1,38 @@
+Bootstrap: library
+From: mnagaso/default/phdf5env:gpu_v1
+
+# using local image
+#Bootstrap: localimage
+#From: ./specfem_envphdf5gpu.sif
+
+
+%setup
+
+%files
+    ../.. /specfem3d
+%environment
+    export PATH=/specfem3d/bin:$PATH
+    export SINGULARITY_MPICH_DIR=$MPICH
+    export SINGULARITYENV_LD_LIBRARY_PATH=$MPICH/lib
+    export SINGULARITYENV_PREPEND_PATH=$MPICH/bin
+%post
+    export LIBPATH=/Libraries
+    # specificate versions
+    export MPICH=$LIBPATH/mpich-3.3
+    export ZLIB=$LIBPATH/zlib-1.2.11
+    export HDF5=$LIBPATH/hdf5-1.10.5
+    export LD_LIBRARY_PATH=$MPICH/lib:$HDF5/lib
+    export PATH=$MPICH/bin:$HDF5/bin:/usr/local/cuda/bin:$PATH
+
+    #apt install -y valgrind
+
+    chmod -R 777 /specfem3d
+    cd /specfem3d
+
+    autoreconf -i
+    #./configure CC=gcc FC=gfortran MPIFC=mpif90 MPI_INC=$MPICH/include --with-mpi
+    ./configure CC=h5pcc FC=h5pfc MPIFC=h5pfc MPI_INC=$MPICH/include NVCC=nvcc CUDA_INC=/usr/local/cuda/include CUDA_LIB=/usr/local/cuda/lib64  --with-mpi --with-hdf5 --with-cuda=cuda8
+    make clean && make
+%labels
+    Author mnsaru22@gmail.com
+    Version v0.0.1

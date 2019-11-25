@@ -1,0 +1,10 @@
+version: '3'
+services:
+  spec:
+    build:
+      context: .
+      dockerfile: ./container_files/docker_files/Dockerfile
+      #volumes:
+      #  - .:/specfem3d
+    tty: true
+    stdin_open: true
